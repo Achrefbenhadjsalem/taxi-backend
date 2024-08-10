@@ -16,7 +16,7 @@ const transporter = nodemailer.createTransport({
 // Fonction pour enregistrer un utilisateur
 exports.register = async (req, res) => {
     try {
-        const { username, password, email } = req.body;
+        const { username, password, email,role } = req.body;
 
         // Vérifier la validité de l'email
         if (!isEmail(email)) {
@@ -30,7 +30,7 @@ exports.register = async (req, res) => {
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        const user = await User.create({ username, password: hashedPassword, email });
+        const user = await User.create({ username, password: hashedPassword, email ,role});
 
         // Envoyer un email de confirmation
         const mailOptions = {
@@ -69,7 +69,7 @@ exports.login = async (req, res) => {
         if (!isPasswordValid) {
             return res.status(401).json({ error: 'Invalid password' });
         }
-        const token = jwt.sign({ userId: user.id }, 'your_jwt_secret_key', { expiresIn: '1h' });
+        const token = jwt.sign({ userId: user.id, role: user.role }, 'your_jwt_secret_key', { expiresIn: '1h' });
         res.json({ token });
     } catch (error) {
         console.error('Error in login function:', error);

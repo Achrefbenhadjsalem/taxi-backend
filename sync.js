@@ -1,6 +1,10 @@
 const sequelize = require('./config');
 const User = require('./models/User');
-sequelize.sync()
+const Trip = require('./models/Trip');
+const Message=require('./models/Message');
+
+
+sequelize.sync({ force: true })
     .then(() => {
         console.log('Database & tables created!');
     })

@@ -1,12 +1,16 @@
-
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config');
+const Message = require('./Message');
 
 const User = sequelize.define('User', {
+    id: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        primaryKey: true
+    },
     username: {
         type: DataTypes.STRING,
-        allowNull: false,
-        unique: true
+        allowNull: false
     },
     password: {
         type: DataTypes.STRING,
@@ -14,9 +18,27 @@ const User = sequelize.define('User', {
     },
     email: {
         type: DataTypes.STRING,
-        allowNull: false,
-        unique: true
+        allowNull: false
+    },
+    role: {
+        type: DataTypes.STRING,
+        defaultValue: 'user'
+    },
+    isApproved: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
+    },
+    isBlocked: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
     }
 });
+
+module.exports = User;
+
+User.hasMany(Message, { foreignKey: 'senderId' });
+User.hasMany(Message, { foreignKey: 'receiverId' });
+Message.belongsTo(User, { as: 'Sender', foreignKey: 'senderId' });
+Message.belongsTo(User, { as: 'Receiver', foreignKey: 'receiverId' });
 
 module.exports = User;
