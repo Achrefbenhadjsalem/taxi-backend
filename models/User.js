@@ -18,11 +18,13 @@ const User = sequelize.define('User', {
     },
     email: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: false,
+        unique: true
     },
     role: {
-        type: DataTypes.STRING,
-        defaultValue: 'user'
+        type: DataTypes.ENUM('Client', 'Driver', 'SuperAdmin'), 
+        allowNull: false,
+        defaultValue: 'Client'
     },
     isApproved: {
         type: DataTypes.BOOLEAN,
@@ -33,8 +35,6 @@ const User = sequelize.define('User', {
         defaultValue: false
     }
 });
-
-module.exports = User;
 
 User.hasMany(Message, { foreignKey: 'senderId' });
 User.hasMany(Message, { foreignKey: 'receiverId' });

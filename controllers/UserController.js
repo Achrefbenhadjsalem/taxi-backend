@@ -6,41 +6,36 @@ const { isEmail } = require('validator');
 
 // Configurer le transporteur pour l'envoi des emails
 const transporter = nodemailer.createTransport({
-    service: 'gmail', // Vous pouvez utiliser d'autres services comme 'sendgrid', 'mailgun', etc.
+    service: 'gmail',
     auth: {
-        user: 'houssembaklouti06@gmail.com', // Remplacez par votre email
-        pass: 'lwgn yrnx djqx waxz' // Remplacez par votre mot de passe email
+        user: 'houssembaklouti06@gmail.com',
+        pass: 'your_email_password'
     }
 });
 
-// Fonction pour enregistrer un utilisateur
 exports.register = async (req, res) => {
     try {
-        const { username, password, email,role } = req.body;
+        const { username, password, email, role } = req.body;
 
-        // Vérifier la validité de l'email
         if (!isEmail(email)) {
             return res.status(400).json({ error: 'Invalid email address' });
         }
 
-        // Vérifier si l'utilisateur existe déjà
+
         const existingUser = await User.findOne({ where: { email } });
         if (existingUser) {
             return res.status(400).json({ error: 'Email already in use' });
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        const user = await User.create({ username, password: hashedPassword, email ,role});
+        const user = await User.create({ username, password: hashedPassword, email, role });
 
-        // Envoyer un email de confirmation
         const mailOptions = {
-            from: 'houssembaklouti06@gmail.com', // Utilisez le même email que celui utilisé pour l'authentification
+            from: 'houssembaklouti06@gmail.com',
             to: email,
             subject: 'Welcome to Our App',
             text: `Hello ${username},\n\nThank you for registering at our app.\n\nBest regards,\nThe Team`
         };
-
-        console.log('Sending email to:', email);
 
         transporter.sendMail(mailOptions, (error, info) => {
             if (error) {
@@ -57,18 +52,29 @@ exports.register = async (req, res) => {
     }
 };
 
-// Fonction pour se connecter
 exports.login = async (req, res) => {
     try {
         const { username, password } = req.body;
         const user = await User.findOne({ where: { username } });
+        
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }
+
+        if (!user.isApproved) {
+            return res.status(403).json({ error: 'Your account is not approved yet. Please wait for approval.' });
+        }
+
+        if (user.isBlocked) {
+            return res.status(403).json({ error: 'Your account has been blocked. Please contact support.' });
+        }
+
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) {
             return res.status(401).json({ error: 'Invalid password' });
         }
+        
+
         const token = jwt.sign({ userId: user.id, role: user.role }, 'your_jwt_secret_key', { expiresIn: '1h' });
         res.json({ token });
     } catch (error) {
