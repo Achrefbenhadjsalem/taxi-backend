@@ -17,10 +17,13 @@ exports.register = async (req, res) => {
     try {
         const { username, password, email, role } = req.body;
 
+        if (!['Client', 'Driver'].includes(role)) {
+            return res.status(400).json({ error: 'Invalid role selected' });
+        }
+
         if (!isEmail(email)) {
             return res.status(400).json({ error: 'Invalid email address' });
         }
-
 
         const existingUser = await User.findOne({ where: { email } });
         if (existingUser) {
@@ -51,7 +54,6 @@ exports.register = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
-
 exports.login = async (req, res) => {
     try {
         const { username, password } = req.body;
@@ -73,7 +75,6 @@ exports.login = async (req, res) => {
         if (!isPasswordValid) {
             return res.status(401).json({ error: 'Invalid password' });
         }
-        
 
         const token = jwt.sign({ userId: user.id, role: user.role }, 'your_jwt_secret_key', { expiresIn: '1h' });
         res.json({ token });
